@@ -3,18 +3,28 @@ title ЛОКАЛЬНЫЕ ЛОГИ ОРБИКС
 color 0A
 echo Проверка обновлений...
 
-:: 🔴 ВСТАВЬ СЮДА ССЫЛКУ НА СКАЧИВАНИЕ ZIP С ТВОЕГО GITHUB 🔴
-:: Пример: https://github.com/твой_ник/твой_репо/archive/refs/heads/main.zip
+:: Ссылка на твой ZIP-архив с GitHub
 set GITHUB_ZIP_URL=https://github.com/mafiabobr666-art/bot-portable/archive/refs/heads/main.zip
 
-:: Скачиваем архив через PowerShell (встроен в Windows)
+:: Скачиваем архив
 powershell -Command "Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile 'update.zip'"
+
+:: Если архив скачался, распаковываем
 if exist update.zip (
     echo Распаковка обновлений...
     powershell -Command "Expand-Archive -Path 'update.zip' -DestinationPath 'temp_update' -Force"
-    xcopy /Y /E /Q "temp_update\*" .
+    
+    :: Копируем файлы из вложенной папки (bot-portable-main/portable_web/*) в текущую папку
+    if exist "temp_update\bot-portable-main\portable_web" (
+        xcopy /Y /E /Q "temp_update\bot-portable-main\portable_web\*" .
+    ) else (
+        xcopy /Y /E /Q "temp_update\*" .
+    )
+    
+    :: Удаляем временные файлы
     rmdir /S /Q temp_update
     del update.zip
+    echo Обновления установлены!
 )
 
 echo Запуск сайта...
