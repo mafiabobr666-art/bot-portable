@@ -3,10 +3,12 @@ import sqlite3
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 import uvicorn
+import json
 
 app = FastAPI()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "bot_logs.db")
+PROFILE_PATH = os.path.join(BASE_DIR, "profile.txt")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -19,15 +21,27 @@ def init_db():
 
 init_db()
 
-@app.get("/", response_class=HTMLResponse)
-async def dashboard(request: Request):
-    # Получаем данные пользователя из параметров URL
-    user_id = request.query_params.get("user_id", "0")
+def get_profile(request: Request):
+    # 1. Пытаемся прочитать из файла profile.txt
+    if os.path.exists(PROFILE_PATH):
+        try:
+            with open(PROFILE_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("name", "Пользователь"), data.get("display_name", "Пользователь"), data.get("avatar", "")
+        except Exception:
+            pass
+
+    # 2. Если файла нет, берем из параметров URL
     user_name = request.query_params.get("name", "Пользователь")
     user_display = request.query_params.get("display_name", "Пользователь")
+    avatar_url = request.query_params.get("avatar", "")
+    return user_name, user_display, avatar_url
+
+@app.get("/", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    user_name, user_display, avatar_url = get_profile(request)
     
     # Аватарка: если нет, ставим заглушку
-    avatar_url = request.query_params.get("avatar", "")
     if not avatar_url or not avatar_url.startswith("http"):
         avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
 
@@ -37,7 +51,6 @@ async def dashboard(request: Request):
     rows = cursor.fetchall()
     conn.close()
 
-    # Генерируем строки таблицы
     rows_html = ""
     for r in rows:
         badge_class = r[2]
