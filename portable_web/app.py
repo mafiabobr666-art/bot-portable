@@ -6,9 +6,11 @@ import uvicorn
 import json
 
 app = FastAPI()
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "bot_logs.db")
-PROFILE_PATH = os.path.join(BASE_DIR, "profile.txt")
+
+# 🔥 ИСПРАВЛЕНИЕ: Ищем файлы в ТЕКУЩЕЙ папке (откуда запущен start.bat), а не внутри exe
+CURRENT_DIR = os.getcwd()
+DB_PATH = os.path.join(CURRENT_DIR, "bot_logs.db")
+PROFILE_PATH = os.path.join(CURRENT_DIR, "profile.txt")
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -21,8 +23,7 @@ def init_db():
 
 init_db()
 
-def get_profile(request: Request):
-    # 1. Пытаемся прочитать из файла profile.txt
+def get_profile():
     if os.path.exists(PROFILE_PATH):
         try:
             with open(PROFILE_PATH, "r", encoding="utf-8") as f:
@@ -30,18 +31,12 @@ def get_profile(request: Request):
                 return data.get("name", "Пользователь"), data.get("display_name", "Пользователь"), data.get("avatar", "")
         except Exception:
             pass
-
-    # 2. Если файла нет, берем из параметров URL
-    user_name = request.query_params.get("name", "Пользователь")
-    user_display = request.query_params.get("display_name", "Пользователь")
-    avatar_url = request.query_params.get("avatar", "")
-    return user_name, user_display, avatar_url
+    return "Пользователь", "Пользователь", ""
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    user_name, user_display, avatar_url = get_profile(request)
+    user_name, user_display, avatar_url = get_profile()
     
-    # Аватарка: если нет, ставим заглушку
     if not avatar_url or not avatar_url.startswith("http"):
         avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
 
@@ -153,17 +148,6 @@ async def dashboard(request: Request):
             
             <div class="footer">Создатель проекта: Ёжик</div>
         </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {{
-                const counters = document.querySelectorAll('.counter');
-                counters.forEach(counter => {{
-                    const target = +counter.getAttribute('data-target');
-                    const count = +counter.innerText;
-                    const inc = target / 200;
-                    if (count < target) {{ counter.innerText = Math.ceil(count + inc); setTimeout(updateCount, 10); }} else {{ counter.innerText = target; }}
-                }});
-            }});
-        </script>
     </body>
     </html>
     """
