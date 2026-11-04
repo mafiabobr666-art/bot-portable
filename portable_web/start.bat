@@ -5,7 +5,7 @@ echo Проверка обновлений...
 
 :: 🔴 ВСТАВЬ СЮДА ССЫЛКУ НА СКАЧИВАНИЕ ZIP С ТВОЕГО GITHUB 🔴
 :: Пример: https://github.com/твой_ник/твой_репо/archive/refs/heads/main.zip
-set GITHUB_ZIP_URL=https://github.com/твой_ник/твой_репо/archive/refs/heads/main.zip
+set GITHUB_ZIP_URL=https://github.com/mafiabobr666-art/bot-portable/archive/refs/heads/main.zip
 
 :: Скачиваем архив через PowerShell (встроен в Windows)
 powershell -Command "Invoke-WebRequest -Uri '%GITHUB_ZIP_URL%' -OutFile 'update.zip'"
